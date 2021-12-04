@@ -134,7 +134,6 @@
   (println "---------------------------")
   (loop []
     (println "Insert your command: ")
-    print
     (let [command (read-line)]
       (when (not= command "q")
         (let [splitted (split command #" ")]
