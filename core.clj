@@ -56,16 +56,16 @@
         (and (blank? from) (blank? to)) true))
 
 (defn get-rides-date-between [[from-date [to-date]] the-rides]
-   (filterv #(date-is-between (:date %) from-date to-date ) the-rides))
+  (filterv #(date-is-between (:date %) from-date to-date ) the-rides))
 
 (defn get-rides-with-minimum-seats [minimum-seats data]
   (if (blank? minimum-seats) data
     (filterv #(<= (Long/parseLong minimum-seats) (Long/parseLong (:number-of-seats %))) data)))
 
 (defn get-rides-by-cities [[from-city [to-city]] data]
-   (cond->> data
-     from-city (get-set-where :from-city from-city)
-     to-city (get-set-where :to-city to-city)))
+  (cond->> data
+    from-city (get-set-where :from-city from-city)
+    to-city (get-set-where :to-city to-city)))
 
 
 (defn print-rides [the-rides]
@@ -75,11 +75,29 @@
     (println "===========================")
     ))
 
-(defn search-ride [[from-city [to-city] :as cities] [from-date [to-date] :as dates] [minimum-seats]]
+(defn search-rides [[_ [_] :as cities] [_ [_] :as dates] [minimum-seats]]
   (cond->> @rides
     cities (get-rides-by-cities cities)
     dates (get-rides-date-between dates)
     minimum-seats (get-rides-with-minimum-seats minimum-seats)))
+
+(defn optional-search-rides
+  ([] @rides)
+
+  ([from-city]
+   (search-rides [from-city nil] nil nil))
+
+  ([from-city to-city]
+   (search-rides [from-city [to-city]] nil nil))
+
+  ([from-city to-city from-date]
+   (search-rides [from-city [to-city]] [from-date] nil))
+
+  ([from-city to-city from-date to-date]
+   (search-rides [from-city [to-city]] [from-date [to-date]] nil))
+
+  ([from-city to-city from-date to-date minimum-seats]
+   (search-rides [from-city [to-city]] [from-date [to-date]] [minimum-seats])))
 
 (defn create-ride [[ from-city to-city date seats] & args]
   (swap! rides conj {:from-city from-city :to-city to-city :date date :number-of-seats seats}))
@@ -91,9 +109,7 @@
 
 (defn handle-command [command & args]
   (cond
-    (= "S" command) (print-rides
-                      (let [[from-city to-city  from-date to-date minimum-seats ] args ]
-                        (search-ride [from-city [to-city]] [from-date [to-date]] [minimum-seats])))
+    (= "S" command) (print-rides (apply optional-search-rides args))
     (= "C" command) (create-ride args)
     (= "R" command) (create-return-ride-from-last args)
     (= "t" command) (do
