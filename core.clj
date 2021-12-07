@@ -55,19 +55,17 @@
         (and (not (blank? from)) (blank? to)) (equal-to date from)
         (and (blank? from) (blank? to)) true))
 
-(defn get-rides-date-between
-  ([from-date to-date the-rides]
-   (filterv #(date-is-between (:date %) from-date to-date ) the-rides)))
+(defn get-rides-date-between [[from-date [to-date]] the-rides]
+   (filterv #(date-is-between (:date %) from-date to-date ) the-rides))
 
 (defn get-rides-with-minimum-seats [minimum-seats data]
   (if (blank? minimum-seats) data
     (filterv #(<= (Long/parseLong minimum-seats) (Long/parseLong (:number-of-seats %))) data)))
 
-(defn get-rides-by-cities
-  ([from-city to-city data]
-   (->> data
-        (get-set-where :from-city from-city)
-        (get-set-where :to-city to-city))))
+(defn get-rides-by-cities [[from-city [to-city]] data]
+   (cond->> data
+     from-city (get-set-where :from-city from-city)
+     to-city (get-set-where :to-city to-city)))
 
 
 (defn print-rides [the-rides]
@@ -77,38 +75,11 @@
     (println "===========================")
     ))
 
-
-;; Other way to do optional parameters, but not pretty
-(defn optional-search-ride
-
-  ([from-city]
-   (get-rides-by-cities from-city nil @rides))
-
-  ([from-city to-city]
-   (get-rides-by-cities from-city to-city @rides))
-
-  ([from-city to-city from-date]
-   (->> @rides
-        (get-rides-by-cities from-city to-city)
-        (get-rides-date-between from-date nil)))
-
-  ([from-city to-city from-date to-date]
-   (->> @rides
-        (get-rides-by-cities from-city to-city)
-        (get-rides-date-between from-date to-date)))
-
-  ([from-city to-city from-date to-date minimum-seats]
-   (->> @rides
-        (get-rides-by-cities from-city to-city)
-        (get-rides-date-between from-date to-date)
-        (get-rides-with-minimum-seats minimum-seats))))
-
-;; Not sure about this
-(defn search-ride [[from-city [to-city]] [from-date [to-date]] [minimum-seats]]
-  (->> @rides
-       (get-rides-by-cities from-city to-city)
-       (get-rides-date-between from-date to-date)
-       (get-rides-with-minimum-seats minimum-seats)))
+(defn search-ride [[from-city [to-city] :as cities] [from-date [to-date] :as dates] [minimum-seats]]
+  (cond->> @rides
+    cities (get-rides-by-cities cities)
+    dates (get-rides-date-between dates)
+    minimum-seats (get-rides-with-minimum-seats minimum-seats)))
 
 (defn create-ride [[ from-city to-city date seats] & args]
   (swap! rides conj {:from-city from-city :to-city to-city :date date :number-of-seats seats}))
