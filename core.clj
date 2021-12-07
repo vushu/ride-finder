@@ -78,7 +78,32 @@
     ))
 
 
+;; Other way to do optional parameters, but not pretty
+(defn optional-search-ride
 
+  ([from-city]
+   (get-rides-by-cities from-city nil @rides))
+
+  ([from-city to-city]
+   (get-rides-by-cities from-city to-city @rides))
+
+  ([from-city to-city from-date]
+   (->> @rides
+        (get-rides-by-cities from-city to-city)
+        (get-rides-date-between from-date nil)))
+
+  ([from-city to-city from-date to-date]
+   (->> @rides
+        (get-rides-by-cities from-city to-city)
+        (get-rides-date-between from-date to-date)))
+
+  ([from-city to-city from-date to-date minimum-seats]
+   (->> @rides
+        (get-rides-by-cities from-city to-city)
+        (get-rides-date-between from-date to-date)
+        (get-rides-with-minimum-seats minimum-seats))))
+
+;; Not sure about this
 (defn search-ride [[from-city [to-city]] [from-date [to-date]] [minimum-seats]]
   (->> @rides
        (get-rides-by-cities from-city to-city)
