@@ -77,13 +77,13 @@
     (println "===========================")
     ))
 
-(defn search-ride
-  ([[from-city to-city from-date to-date minimum-seats] & the-rest]
-   (->> @rides
-        (get-rides-by-cities from-city to-city)
-        (get-rides-date-between from-date to-date)
-        (get-rides-with-minimum-seats minimum-seats)
-        )))
+
+
+(defn search-ride [{:keys [from-city to-city from-date to-date minimum-seats] :or { from-city "" to-city "" from-date "" to-date "" minimum-seats ""}}]
+  (->> @rides
+       (get-rides-by-cities from-city to-city)
+       (get-rides-date-between from-date to-date)
+       (get-rides-with-minimum-seats minimum-seats)))
 
 (defn create-ride [[ from-city to-city date seats] & args]
   (swap! rides conj {:from-city from-city :to-city to-city :date date :number-of-seats seats}))
@@ -95,7 +95,7 @@
 
 (defn handle-command [command & args]
   (cond
-    (= "S" command) (print-rides (search-ride args))
+    (= "S" command) (print-rides (search-ride (zipmap [:from-city :to-city :from-date :to-date :minimum-seats] args)))
     (= "C" command) (create-ride args)
     (= "R" command) (create-return-ride-from-last args)
     (= "t" command) (do
